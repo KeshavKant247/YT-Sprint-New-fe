@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import apiService from '../services/api';
 
 function Leaderboard({ onClose, allData }) {
@@ -10,47 +10,8 @@ function Leaderboard({ onClose, allData }) {
   const [viewMode, setViewMode] = useState('vertical'); // 'vertical' or 'user'
   const [userLeaderboardData, setUserLeaderboardData] = useState([]);
 
-  // Fetch leaderboard data from backend API
-  useEffect(() => {
-    fetchLeaderboard();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only fetch once on mount; allData is only used as fallback
-
-  const fetchLeaderboard = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await apiService.getLeaderboard();
-
-      if (response.success) {
-        setLeaderboardData(response.leaderboard || []);
-        setSummary(response.summary || null);
-
-        // Calculate user leaderboard from vertical data
-        if (response.leaderboard && response.leaderboard.length > 0) {
-          calculateUserLeaderboard(response.leaderboard);
-        }
-      } else {
-        setError(response.error || 'Failed to fetch leaderboard data');
-        // Fallback to frontend calculation if API fails
-        if (allData && allData.length > 0) {
-          calculateLeaderboardFromData(allData);
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching leaderboard:', err);
-      setError(err.message || 'An error occurred while fetching leaderboard');
-      // Fallback to frontend calculation if API fails
-      if (allData && allData.length > 0) {
-        calculateLeaderboardFromData(allData);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Calculate user-wise leaderboard from vertical data
-  const calculateUserLeaderboard = (verticals) => {
+  const calculateUserLeaderboard = useCallback((verticals) => {
     const userMap = {};
 
     verticals.forEach(vertical => {
@@ -79,9 +40,50 @@ function Leaderboard({ onClose, allData }) {
       .sort((a, b) => b.totalVideos - a.totalVideos);
 
     setUserLeaderboardData(userList);
-  };
+  }, []);
 
-  // Fallback: Calculate leaderboard from allData if API fails
+  // Fetch leaderboard data from backend API
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchLeaderboard = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await apiService.getLeaderboard();
+
+        if (!isMounted) return;
+
+        if (response.success) {
+          setLeaderboardData(response.leaderboard || []);
+          setSummary(response.summary || null);
+
+          // Calculate user leaderboard from vertical data
+          if (response.leaderboard && response.leaderboard.length > 0) {
+            calculateUserLeaderboard(response.leaderboard);
+          }
+        } else {
+          setError(response.error || 'Failed to fetch leaderboard data');
+        }
+      } catch (err) {
+        if (!isMounted) return;
+        console.error('Error fetching leaderboard:', err);
+        setError(err.message || 'An error occurred while fetching leaderboard');
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchLeaderboard();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [calculateUserLeaderboard]); // Only fetch once on mount
+
+  // Fallback: Calculate leaderboard from allData if API fails (not used anymore)
   const calculateLeaderboardFromData = (data) => {
     const verticalCounts = {};
 
