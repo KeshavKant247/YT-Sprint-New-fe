@@ -275,7 +275,7 @@ function AddEntryModal({ onClose, onAdd, categories, exams, uniqueSubjects, exis
       }
     }
 
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://shortssprits-backend.vercel.app';
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://yt-sprint-new-fe-uzhk.vercel.app/';
 
     // For Re-edit entries with Google Drive link, just submit directly
     if (formData['Edit'] === 'Re-edit' && formData['Re-edit Drive Link']) {
