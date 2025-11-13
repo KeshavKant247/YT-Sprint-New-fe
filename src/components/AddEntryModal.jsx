@@ -73,12 +73,14 @@ function AddEntryModal({ onClose, onAdd, categories, exams, uniqueSubjects, exis
         setLinkCheckResult({
           exists: true,
           videoId: videoId,
+          message: '❌ Video is duplicate',
           data: duplicate
         });
       } else {
         setLinkCheckResult({
           exists: false,
-          videoId: videoId
+          videoId: videoId,
+          message: '✅ Good to go!!'
         });
         // Automatically populate the Video Link field when video is not found
         handleChange('Video Link', checkLinkUrl);
@@ -536,16 +538,10 @@ function AddEntryModal({ onClose, onAdd, categories, exams, uniqueSubjects, exis
                       textAlign: 'center',
                       padding: '2rem'
                     }}>
-                      <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🕐</div>
+                      <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>❌</div>
                       <h1 style={{ fontSize: '2.5rem', marginBottom: '1.5rem', color: '#fff' }}>
-                        ⚠️ Video Already Exists
+                        {linkCheckResult.message || '❌ Video is duplicate'}
                       </h1>
-                      <p style={{ fontSize: '1.5rem', marginBottom: '1rem', lineHeight: '1.6' }}>
-                        This website opens at <strong style={{ color: '#FFD700' }}>7:00 PM</strong>
-                      </p>
-                      <p style={{ fontSize: '1.2rem', color: '#FFD700', marginTop: '1rem' }}>
-                        Please join again between <strong>7:00 PM to 10:00 PM</strong>
-                      </p>
                       <button
                         onClick={() => {
                           setLinkCheckResult(null);
@@ -555,7 +551,7 @@ function AddEntryModal({ onClose, onAdd, categories, exams, uniqueSubjects, exis
                           marginTop: '2rem',
                           padding: '1rem 2rem',
                           fontSize: '1.1rem',
-                          backgroundColor: '#007bff',
+                          backgroundColor: '#dc3545',
                           color: 'white',
                           border: 'none',
                           borderRadius: '8px',
@@ -570,7 +566,7 @@ function AddEntryModal({ onClose, onAdd, categories, exams, uniqueSubjects, exis
 
                 {linkCheckResult.exists === false && (
                   <div className="verification-result-success">
-                    <strong>✅ No duplicate found</strong>
+                    <strong>{linkCheckResult.message || '✅ Good to go!!'}</strong>
                   </div>
                 )}
               </div>
