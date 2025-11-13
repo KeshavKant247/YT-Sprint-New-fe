@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, memo, useRef } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import apiService from '../services/api';
 
 const Leaderboard = memo(({ onClose, allData }) => {
@@ -9,27 +9,56 @@ const Leaderboard = memo(({ onClose, allData }) => {
   const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState('vertical'); // 'vertical' or 'user'
   const [userLeaderboardData, setUserLeaderboardData] = useState([]);
-  const hasFetchedRef = useRef(false);
 
   // Calculate user-wise leaderboard from vertical data
   const calculateUserLeaderboard = useCallback((verticals) => {
     const userMap = {};
 
     verticals.forEach(vertical => {
-      if (vertical.topContributors && vertical.topContributors.length > 0) {
-        vertical.topContributors.forEach(contributor => {
+      // Process final contributors
+      if (vertical.topFinalContributors && vertical.topFinalContributors.length > 0) {
+        vertical.topFinalContributors.forEach(contributor => {
           if (!userMap[contributor.email]) {
             userMap[contributor.email] = {
               email: contributor.email,
               totalVideos: 0,
+              finalVideos: 0,
+              reEditVideos: 0,
               totalEarnings: 0,
               verticals: []
             };
           }
           userMap[contributor.email].totalVideos += contributor.count;
+          userMap[contributor.email].finalVideos += contributor.count;
           userMap[contributor.email].totalEarnings += contributor.earnings || (contributor.count * 50);
           userMap[contributor.email].verticals.push({
             name: vertical.name,
+            type: 'final',
+            count: contributor.count,
+            earnings: contributor.earnings || (contributor.count * 50)
+          });
+        });
+      }
+
+      // Process re-edit contributors
+      if (vertical.topReEditContributors && vertical.topReEditContributors.length > 0) {
+        vertical.topReEditContributors.forEach(contributor => {
+          if (!userMap[contributor.email]) {
+            userMap[contributor.email] = {
+              email: contributor.email,
+              totalVideos: 0,
+              finalVideos: 0,
+              reEditVideos: 0,
+              totalEarnings: 0,
+              verticals: []
+            };
+          }
+          userMap[contributor.email].totalVideos += contributor.count;
+          userMap[contributor.email].reEditVideos += contributor.count;
+          userMap[contributor.email].totalEarnings += contributor.earnings || (contributor.count * 50);
+          userMap[contributor.email].verticals.push({
+            name: vertical.name,
+            type: 're-edit',
             count: contributor.count,
             earnings: contributor.earnings || (contributor.count * 50)
           });
@@ -45,28 +74,26 @@ const Leaderboard = memo(({ onClose, allData }) => {
 
   // Fetch leaderboard data from backend API
   useEffect(() => {
-    // Use ref to persist across re-renders
-    if (hasFetchedRef.current) {
-      console.log('Already fetched, skipping...');
-      return;
-    }
-
     let isMounted = true;
 
     const fetchLeaderboard = async () => {
-      hasFetchedRef.current = true;
-
       try {
         setLoading(true);
         setError(null);
 
-        console.log('Fetching leaderboard data...');
+        console.log('🔄 Fetching leaderboard data...');
+        const startTime = performance.now();
         const response = await apiService.getLeaderboard();
-        console.log('Leaderboard response:', response);
+        const endTime = performance.now();
+        console.log(`✅ Leaderboard response received in ${(endTime - startTime).toFixed(2)}ms:`, response);
 
-        if (!isMounted) return;
+        if (!isMounted) {
+          console.log('⚠️ Component unmounted, ignoring response');
+          return;
+        }
 
         if (response && response.success) {
+          console.log(`📊 Setting leaderboard data: ${response.leaderboard?.length || 0} verticals`);
           setLeaderboardData(response.leaderboard || []);
           setSummary(response.summary || null);
 
@@ -74,18 +101,21 @@ const Leaderboard = memo(({ onClose, allData }) => {
           if (response.leaderboard && response.leaderboard.length > 0) {
             calculateUserLeaderboard(response.leaderboard);
           }
+
+          console.log('✅ Leaderboard data set successfully');
         } else {
           const errorMsg = response?.error || 'Failed to fetch leaderboard data';
-          console.error('Leaderboard error:', errorMsg);
+          console.error('❌ Leaderboard error:', errorMsg);
           setError(errorMsg);
         }
       } catch (err) {
         if (!isMounted) return;
-        console.error('Error fetching leaderboard:', err);
+        console.error('❌ Error fetching leaderboard:', err);
         const errorMsg = err.response?.data?.error || err.message || 'An error occurred while fetching leaderboard';
         setError(errorMsg);
       } finally {
         if (isMounted) {
+          console.log('🏁 Setting loading to false');
           setLoading(false);
         }
       }
@@ -94,6 +124,7 @@ const Leaderboard = memo(({ onClose, allData }) => {
     fetchLeaderboard();
 
     return () => {
+      console.log('🧹 Leaderboard component cleanup');
       isMounted = false;
     };
   }, []); // Empty dependency array - only run once on mount
@@ -260,6 +291,7 @@ const Leaderboard = memo(({ onClose, allData }) => {
                         <div className="vertical-info">
                           <h3>{vertical.name}</h3>
                           <div className="vertical-stats">
+                            <span>📹 {vertical.totalVideos} total</span>
                             <span>✅ {vertical.finalVideos} final</span>
                             <span>🔄 {vertical.reEditVideos} re-edit</span>
                           </div>
@@ -289,7 +321,8 @@ const Leaderboard = memo(({ onClose, allData }) => {
                       <div className="vertical-info">
                         <h3>{user.email}</h3>
                         <div className="vertical-stats">
-                          <span>📹 {user.totalVideos} videos</span>
+                          <span>✅ {user.finalVideos} final</span>
+                          <span>🔄 {user.reEditVideos} re-edit</span>
                           <span>📊 {user.verticals.length} verticals</span>
                         </div>
                       </div>
@@ -332,26 +365,77 @@ const Leaderboard = memo(({ onClose, allData }) => {
 
                   return (
                     <>
-                      {/* Top Contributors */}
-                      {verticalData.topContributors && verticalData.topContributors.length > 0 && (
-                        <div className="top-contributors">
-                          <h4>🌟 Top Contributors & Earnings</h4>
-                          <div className="contributors-list">
-                            {verticalData.topContributors.map((contributor, index) => (
-                              <div key={contributor.email} className="contributor-item">
-                                <span className="contributor-rank">{getMedalEmoji(index)}</span>
-                                <div className="contributor-info">
-                                  <span className="contributor-email">{contributor.email}</span>
-                                  <span className="contributor-stats">
-                                    {contributor.count} videos • ₹{contributor.earnings || (contributor.count * 50)}
-                                  </span>
+                      {/* Top Contributors - Combined Final and Re-edit */}
+                      {(() => {
+                        // Combine final and re-edit contributors
+                        const allContributors = {};
+
+                        // Add final contributors
+                        if (verticalData.topFinalContributors) {
+                          verticalData.topFinalContributors.forEach(contributor => {
+                            if (!allContributors[contributor.email]) {
+                              allContributors[contributor.email] = {
+                                email: contributor.email,
+                                finalCount: 0,
+                                reEditCount: 0,
+                                totalCount: 0,
+                                totalEarnings: 0
+                              };
+                            }
+                            allContributors[contributor.email].finalCount += contributor.count;
+                            allContributors[contributor.email].totalCount += contributor.count;
+                            allContributors[contributor.email].totalEarnings += contributor.earnings || (contributor.count * 50);
+                          });
+                        }
+
+                        // Add re-edit contributors
+                        if (verticalData.topReEditContributors) {
+                          verticalData.topReEditContributors.forEach(contributor => {
+                            if (!allContributors[contributor.email]) {
+                              allContributors[contributor.email] = {
+                                email: contributor.email,
+                                finalCount: 0,
+                                reEditCount: 0,
+                                totalCount: 0,
+                                totalEarnings: 0
+                              };
+                            }
+                            allContributors[contributor.email].reEditCount += contributor.count;
+                            allContributors[contributor.email].totalCount += contributor.count;
+                            allContributors[contributor.email].totalEarnings += contributor.earnings || (contributor.count * 50);
+                          });
+                        }
+
+                        // Convert to array and sort by total count
+                        const contributorsList = Object.values(allContributors)
+                          .sort((a, b) => b.totalCount - a.totalCount)
+                          .slice(0, 5); // Top 5
+
+                        if (contributorsList.length === 0) return null;
+
+                        return (
+                          <div className="top-contributors">
+                            <h4>🌟 Top Contributors & Earnings</h4>
+                            <div className="contributors-list">
+                              {contributorsList.map((contributor, index) => (
+                                <div key={contributor.email} className="contributor-item">
+                                  <span className="contributor-rank">{getMedalEmoji(index)}</span>
+                                  <div className="contributor-info">
+                                    <span className="contributor-email">{contributor.email}</span>
+                                    <span className="contributor-stats">
+                                      {contributor.finalCount > 0 && `✅ ${contributor.finalCount} final`}
+                                      {contributor.finalCount > 0 && contributor.reEditCount > 0 && ' • '}
+                                      {contributor.reEditCount > 0 && `🔄 ${contributor.reEditCount} re-edit`}
+                                      {' • '}₹{contributor.totalEarnings}
+                                    </span>
+                                  </div>
+                                  <span className="contributor-earnings">₹{contributor.totalEarnings}</span>
                                 </div>
-                                <span className="contributor-earnings">₹{contributor.earnings || (contributor.count * 50)}</span>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
 
                       {/* Vertical Summary */}
                       <div className="vertical-summary">
@@ -668,6 +752,15 @@ const Leaderboard = memo(({ onClose, allData }) => {
         .contributor-item:hover {
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15);
+        }
+
+        .contributor-item.reedit-contributor {
+          background: #fff8e1;
+          border-left: 4px solid #ff9800;
+        }
+
+        .contributor-item.reedit-contributor:hover {
+          box-shadow: 0 4px 12px rgba(255, 152, 0, 0.15);
         }
 
         .contributor-rank {
