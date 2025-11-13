@@ -45,16 +45,23 @@ function Leaderboard({ onClose, allData }) {
   // Fetch leaderboard data from backend API
   useEffect(() => {
     let isMounted = true;
+    let hasFetched = false;
 
     const fetchLeaderboard = async () => {
+      if (hasFetched) return; // Prevent duplicate calls
+      hasFetched = true;
+
       try {
         setLoading(true);
         setError(null);
+
+        console.log('Fetching leaderboard data...');
         const response = await apiService.getLeaderboard();
+        console.log('Leaderboard response:', response);
 
         if (!isMounted) return;
 
-        if (response.success) {
+        if (response && response.success) {
           setLeaderboardData(response.leaderboard || []);
           setSummary(response.summary || null);
 
@@ -63,12 +70,15 @@ function Leaderboard({ onClose, allData }) {
             calculateUserLeaderboard(response.leaderboard);
           }
         } else {
-          setError(response.error || 'Failed to fetch leaderboard data');
+          const errorMsg = response?.error || 'Failed to fetch leaderboard data';
+          console.error('Leaderboard error:', errorMsg);
+          setError(errorMsg);
         }
       } catch (err) {
         if (!isMounted) return;
         console.error('Error fetching leaderboard:', err);
-        setError(err.message || 'An error occurred while fetching leaderboard');
+        const errorMsg = err.response?.data?.error || err.message || 'An error occurred while fetching leaderboard';
+        setError(errorMsg);
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -81,7 +91,7 @@ function Leaderboard({ onClose, allData }) {
     return () => {
       isMounted = false;
     };
-  }, [calculateUserLeaderboard]); // Only fetch once on mount
+  }, []); // Empty dependency array - only run once on mount
 
   // Fallback: Calculate leaderboard from allData if API fails (not used anymore)
   const calculateLeaderboardFromData = (data) => {
