@@ -120,18 +120,25 @@ function App() {
   const fetchCategories = async () => {
     try {
       const response = await apiService.getCategories();
-      console.log('Categories API Response:', response);
+      console.log('📦 Categories API Response:', response);
+      console.log('📦 Response type:', typeof response);
+      console.log('📦 Response keys:', Object.keys(response || {}));
 
       // Handle different response formats
       if (response.success) {
+        console.log('✅ Setting categories from response.categories');
         setCategories(response.categories || {});
       } else if (response.categories) {
+        console.log('✅ Setting categories from response.categories (no success flag)');
         setCategories(response.categories);
       } else if (typeof response === 'object' && !response.success) {
+        console.log('✅ Setting categories from direct response object');
         setCategories(response);
+      } else {
+        console.warn('⚠️ Unexpected response format for categories');
       }
     } catch (err) {
-      console.error('Error fetching categories:', err);
+      console.error('❌ Error fetching categories:', err);
       console.error('Error details:', err.response?.data);
     }
   };
@@ -139,20 +146,25 @@ function App() {
   const fetchExams = async () => {
     try {
       const response = await apiService.getExams();
-      console.log('Exams API Response:', response);
+      console.log('📚 Exams API Response:', response);
+      console.log('📚 Response type:', typeof response);
+      console.log('📚 Response keys:', Object.keys(response || {}));
 
       // Handle different response formats
       if (response.success) {
+        console.log('✅ Setting exams from response.exams');
         setExams(response.exams || {});
       } else if (response.exams) {
-        // Direct exams object without success flag
+        console.log('✅ Setting exams from response.exams (no success flag)');
         setExams(response.exams);
       } else if (typeof response === 'object' && !response.success) {
-        // Response is the exams object itself
+        console.log('✅ Setting exams from direct response object');
         setExams(response);
+      } else {
+        console.warn('⚠️ Unexpected response format for exams');
       }
     } catch (err) {
-      console.error('Error fetching exams:', err);
+      console.error('❌ Error fetching exams:', err);
       console.error('Error details:', err.response?.data);
     }
   };
