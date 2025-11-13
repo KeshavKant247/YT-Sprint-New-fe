@@ -4,7 +4,7 @@ import apiService from './services/api';
 import Dashboard from './components/Dashboard';
 import AddEntryModal from './components/AddEntryModal';
 import TicketModal from './components/TicketModal';
-import Leaderboard from './components/Leaderboard';
+// import Leaderboard from './components/Leaderboard'; // Temporarily disabled
 
 function App() {
   const [data, setData] = useState([]);
@@ -14,7 +14,7 @@ function App() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  // const [showLeaderboard, setShowLeaderboard] = useState(false); // Temporarily disabled
   // Time restriction removed - accessible 24/7
   // const [isWithinAccessHours, setIsWithinAccessHours] = useState(true);
   // const [currentTime, setCurrentTime] = useState('');
@@ -472,7 +472,7 @@ function App() {
           onClearFilters={handleClearFilters}
           onAddEntry={() => setShowAddModal(true)}
           onRaiseTicket={() => setShowTicketModal(true)}
-          onShowLeaderboard={() => setShowLeaderboard(true)}
+          // onShowLeaderboard={() => setShowLeaderboard(true)} // Temporarily disabled
           onUpdateEntry={handleUpdateEntry}
           onDeleteEntry={handleDeleteEntry}
           uniqueVerticals={getUniqueVerticals()}
@@ -523,12 +523,13 @@ function App() {
           </div>
         )}
 
-        {showLeaderboard && (
+        {/* Leaderboard temporarily disabled */}
+        {/* {showLeaderboard && (
           <Leaderboard
             onClose={() => setShowLeaderboard(false)}
             allData={data}
           />
-        )}
+        )} */}
       </div>
 
     </div>
