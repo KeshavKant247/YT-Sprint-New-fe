@@ -11,6 +11,7 @@ function Dashboard({
   onClearFilters,
   onAddEntry,
   onRaiseTicket,
+  onShowLeaderboard,
   onUpdateEntry,
   onDeleteEntry,
   uniqueVerticals,
@@ -44,6 +45,10 @@ function Dashboard({
             <button className="btn-hero" onClick={onRaiseTicket}>
               <span className="btn-hero-icon">🎫</span>
               <span className="btn-hero-text">Raise Ticket</span>
+            </button>
+            <button className="btn-hero" onClick={onShowLeaderboard}>
+              <span className="btn-hero-icon">🏆</span>
+              <span className="btn-hero-text">Leaderboard</span>
             </button>
           </div>
         </div>

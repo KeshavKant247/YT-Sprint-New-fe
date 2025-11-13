@@ -11,6 +11,35 @@ const api = axios.create({
   },
 });
 
+// Add auth token to all requests
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Handle 401 errors (unauthorized) - redirect to login
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid - clear storage and reload
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_email');
+      localStorage.removeItem('login_timestamp');
+      window.location.reload();
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const apiService = {
   // Fetch all data
   getData: async () => {
@@ -66,6 +95,12 @@ export const apiService = {
       }
       throw error;
     }
+  },
+
+  // Get leaderboard data
+  getLeaderboard: async () => {
+    const response = await api.get('/api/leaderboard');
+    return response.data;
   },
 
   // Domain-based Login (Email only, no password)

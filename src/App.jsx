@@ -4,6 +4,7 @@ import apiService from './services/api';
 import Dashboard from './components/Dashboard';
 import AddEntryModal from './components/AddEntryModal';
 import TicketModal from './components/TicketModal';
+import Leaderboard from './components/Leaderboard';
 
 function App() {
   const [data, setData] = useState([]);
@@ -13,6 +14,7 @@ function App() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   // Time restriction removed - accessible 24/7
   // const [isWithinAccessHours, setIsWithinAccessHours] = useState(true);
   // const [currentTime, setCurrentTime] = useState('');
@@ -268,16 +270,30 @@ function App() {
     return [...new Set(data.map(item => item['Subject']).filter(Boolean))];
   };
 
-  const handleLogin = (email) => {
-    setUserEmail(email);
-    localStorage.setItem('user_email', email);
-    localStorage.setItem('login_timestamp', new Date().getTime().toString());
-    setShowLoginModal(false);
+  const handleLogin = async (email) => {
+    try {
+      // Call backend to get JWT token
+      const response = await apiService.loginWithEmail(email);
+
+      if (response.success && response.token) {
+        setUserEmail(email);
+        localStorage.setItem('user_email', email);
+        localStorage.setItem('auth_token', response.token);
+        localStorage.setItem('login_timestamp', new Date().getTime().toString());
+        setShowLoginModal(false);
+      } else {
+        alert('Login failed: ' + (response.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('Login failed: ' + (error.response?.data?.message || error.message));
+    }
   };
 
   const handleLogout = () => {
     setUserEmail('');
     localStorage.removeItem('user_email');
+    localStorage.removeItem('auth_token');
     localStorage.removeItem('login_timestamp');
     setShowLoginModal(true);
   };
@@ -456,6 +472,7 @@ function App() {
           onClearFilters={handleClearFilters}
           onAddEntry={() => setShowAddModal(true)}
           onRaiseTicket={() => setShowTicketModal(true)}
+          onShowLeaderboard={() => setShowLeaderboard(true)}
           onUpdateEntry={handleUpdateEntry}
           onDeleteEntry={handleDeleteEntry}
           uniqueVerticals={getUniqueVerticals()}
@@ -505,8 +522,15 @@ function App() {
             </div>
           </div>
         )}
+
+        {showLeaderboard && (
+          <Leaderboard
+            onClose={() => setShowLeaderboard(false)}
+            allData={data}
+          />
+        )}
       </div>
-      
+
     </div>
   );
 }
