@@ -13,8 +13,9 @@ function App() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [isWithinAccessHours, setIsWithinAccessHours] = useState(true);
-  const [currentTime, setCurrentTime] = useState('');
+  // Time restriction removed - accessible 24/7
+  // const [isWithinAccessHours, setIsWithinAccessHours] = useState(true);
+  // const [currentTime, setCurrentTime] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [showLoginModal, setShowLoginModal] = useState(false);
 
@@ -30,32 +31,25 @@ function App() {
   const [categories, setCategories] = useState({});
   const [exams, setExams] = useState({});
 
-  // Check if current time is within access hours (7 PM to 10 PM IST)
-  const checkAccessHours = () => {
-    // Get current time in IST (UTC+5:30)
-    const now = new Date();
-    const istOffset = 5.5 * 60; // IST is UTC+5:30
-    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-    const istTime = new Date(utc + (istOffset * 60000));
-
-    const hours = istTime.getHours();
-
-    // Format current time for display
-    const timeString = istTime.toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true,
-      timeZone: 'Asia/Kolkata'
-    });
-    setCurrentTime(timeString);
-
-    // Check if time is between 7 PM (19:00) and 10 PM (22:00)
-    const isWithinHours = hours >= 19 && hours < 22;
-    setIsWithinAccessHours(isWithinHours);
-
-    return isWithinHours;
-  };
+  // Time restriction removed - site is accessible 24/7
+  // const checkAccessHours = () => {
+  //   const now = new Date();
+  //   const istOffset = 5.5 * 60;
+  //   const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  //   const istTime = new Date(utc + (istOffset * 60000));
+  //   const hours = istTime.getHours();
+  //   const timeString = istTime.toLocaleTimeString('en-IN', {
+  //     hour: '2-digit',
+  //     minute: '2-digit',
+  //     second: '2-digit',
+  //     hour12: true,
+  //     timeZone: 'Asia/Kolkata'
+  //   });
+  //   setCurrentTime(timeString);
+  //   const isWithinHours = hours >= 19 && hours < 22;
+  //   setIsWithinAccessHours(isWithinHours);
+  //   return isWithinHours;
+  // };
 
   // Check for saved email on mount
   useEffect(() => {
@@ -81,12 +75,12 @@ function App() {
     }
   }, []);
 
-  // Check access hours on mount and every minute
-  useEffect(() => {
-    checkAccessHours();
-    const interval = setInterval(checkAccessHours, 60000); // Check every minute
-    return () => clearInterval(interval);
-  }, []);
+  // Time restriction removed - no need to check access hours
+  // useEffect(() => {
+  //   checkAccessHours();
+  //   const interval = setInterval(checkAccessHours, 60000);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   // Fetch initial data on mount
   useEffect(() => {
@@ -288,82 +282,7 @@ function App() {
     setShowLoginModal(true);
   };
 
-  // If outside access hours, show restriction screen
-  if (!isWithinAccessHours) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: '#0a0a0a',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        color: 'white',
-        textAlign: 'center',
-        padding: '2rem',
-        fontFamily: 'system-ui, -apple-system, sans-serif'
-      }}>
-        <div style={{ fontSize: '6rem', marginBottom: '2rem', animation: 'pulse 2s infinite' }}>
-          🕐
-        </div>
-        <h1 style={{
-          fontSize: '3rem',
-          marginBottom: '1.5rem',
-          fontWeight: 'bold',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text'
-        }}>
-          Website Currently Closed
-        </h1>
-        <p style={{
-          fontSize: '1.5rem',
-          marginBottom: '1rem',
-          lineHeight: '1.8',
-          color: '#e0e0e0'
-        }}>
-          This website is only accessible during:
-        </p>
-        <div style={{
-          fontSize: '2.5rem',
-          fontWeight: 'bold',
-          color: '#FFD700',
-          margin: '1.5rem 0',
-          padding: '1.5rem 3rem',
-          background: 'rgba(255, 215, 0, 0.1)',
-          borderRadius: '15px',
-          border: '2px solid #FFD700'
-        }}>
-          7:00 PM - 10:00 PM IST
-        </div>
-        <p style={{
-          fontSize: '1.2rem',
-          color: '#999',
-          marginTop: '2rem'
-        }}>
-          Current IST Time: <strong style={{ color: '#FFD700' }}>{currentTime}</strong>
-        </p>
-        <p style={{
-          fontSize: '1rem',
-          color: '#666',
-          marginTop: '3rem'
-        }}>
-          Please visit again during the allowed hours
-        </p>
-        <style>{`
-          @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.8; }
-          }
-        `}</style>
-      </div>
-    );
-  }
+  // Time restriction removed - site is now accessible 24/7
 
   return (
     <div className="app">
@@ -375,24 +294,48 @@ function App() {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0, 0, 0, 0.8)',
+          background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(239, 68, 68, 0.1) 100%)',
+          backdropFilter: 'blur(8px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 10000,
-          backdropFilter: 'blur(4px)',
         }}>
           <div style={{
             background: 'white',
-            borderRadius: '16px',
-            padding: '2.5rem',
+            borderRadius: '20px',
+            padding: '3rem',
             width: '90%',
-            maxWidth: '420px',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+            maxWidth: '450px',
+            boxShadow: '0 25px 70px rgba(236, 72, 153, 0.4), 0 0 0 2px rgba(236, 72, 153, 0.1)',
+            border: '2px solid rgba(236, 72, 153, 0.2)',
           }}>
-            <h2 style={{ marginBottom: '0.5rem', color: '#333', textAlign: 'center' }}>Welcome!</h2>
-            <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '2rem', textAlign: 'center' }}>
-              Please enter your email to continue
+            <div style={{
+              fontSize: '3rem',
+              textAlign: 'center',
+              marginBottom: '1rem',
+              filter: 'drop-shadow(0 2px 4px rgba(236, 72, 153, 0.3))'
+            }}>
+              🎬
+            </div>
+            <h2 style={{
+              marginBottom: '0.5rem',
+              background: 'linear-gradient(135deg, #ec4899 0%, #ef4444 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              textAlign: 'center',
+              fontSize: '2rem',
+              fontWeight: '700'
+            }}>YT Sprints</h2>
+            <p style={{
+              color: '#666',
+              fontSize: '0.95rem',
+              marginBottom: '2rem',
+              textAlign: 'center',
+              lineHeight: '1.6'
+            }}>
+              Login using your ID here to upload your shorts
             </p>
             <form onSubmit={(e) => {
               e.preventDefault();
@@ -401,15 +344,15 @@ function App() {
                 handleLogin(email);
               }
             }}>
-              <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ marginBottom: '2rem' }}>
                 <label style={{
                   display: 'block',
-                  marginBottom: '0.5rem',
+                  marginBottom: '0.75rem',
                   fontWeight: '600',
-                  color: '#555',
-                  fontSize: '0.9rem'
+                  color: '#333',
+                  fontSize: '0.95rem'
                 }}>
-                  Email Address
+                  📧 Email Address
                 </label>
                 <input
                   type="email"
@@ -419,11 +362,20 @@ function App() {
                   autoFocus
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
+                    padding: '1rem',
+                    border: '2px solid #fecdd3',
+                    borderRadius: '12px',
                     fontSize: '1rem',
                     outline: 'none',
+                    transition: 'all 0.3s ease',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#ec4899';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(236, 72, 153, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#fecdd3';
+                    e.target.style.boxShadow = 'none';
                   }}
                 />
               </div>
@@ -431,18 +383,28 @@ function App() {
                 type="submit"
                 style={{
                   width: '100%',
-                  padding: '0.875rem',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  padding: '1rem',
+                  background: 'linear-gradient(135deg, #ec4899 0%, #ef4444 100%)',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '12px',
                   color: 'white',
-                  fontWeight: '600',
-                  fontSize: '1rem',
+                  fontWeight: '700',
+                  fontSize: '1.05rem',
                   cursor: 'pointer',
-                  boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+                  boxShadow: '0 8px 20px rgba(236, 72, 153, 0.4)',
+                  transition: 'all 0.3s ease',
+                  letterSpacing: '0.5px',
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 12px 28px rgba(236, 72, 153, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 8px 20px rgba(236, 72, 153, 0.4)';
                 }}
               >
-                Continue
+                🚀 Continue to Dashboard
               </button>
             </form>
           </div>
