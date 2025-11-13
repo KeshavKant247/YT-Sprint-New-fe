@@ -84,12 +84,14 @@ function App() {
   //   return () => clearInterval(interval);
   // }, []);
 
-  // Fetch initial data on mount
+  // Fetch initial data only after user is authenticated
   useEffect(() => {
-    fetchData();
-    fetchCategories();
-    fetchExams();
-  }, []);
+    if (userEmail) {
+      fetchData();
+      fetchCategories();
+      fetchExams();
+    }
+  }, [userEmail]);
 
   // Apply filters when data or filters change
   useEffect(() => {
