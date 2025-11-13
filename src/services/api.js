@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://shortssprits-backend.vercel.app';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://yt-sprint-new-be.vercel.app';
+
+console.log('🔗 API Base URL:', API_BASE_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,

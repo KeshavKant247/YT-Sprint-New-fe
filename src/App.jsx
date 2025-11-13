@@ -39,7 +39,6 @@ function App() {
     const istTime = new Date(utc + (istOffset * 60000));
 
     const hours = istTime.getHours();
-    const minutes = istTime.getMinutes();
 
     // Format current time for display
     const timeString = istTime.toLocaleTimeString('en-IN', {
@@ -121,22 +120,40 @@ function App() {
   const fetchCategories = async () => {
     try {
       const response = await apiService.getCategories();
+      console.log('Categories API Response:', response);
+
+      // Handle different response formats
       if (response.success) {
+        setCategories(response.categories || {});
+      } else if (response.categories) {
         setCategories(response.categories);
+      } else if (typeof response === 'object' && !response.success) {
+        setCategories(response);
       }
     } catch (err) {
       console.error('Error fetching categories:', err);
+      console.error('Error details:', err.response?.data);
     }
   };
 
   const fetchExams = async () => {
     try {
       const response = await apiService.getExams();
+      console.log('Exams API Response:', response);
+
+      // Handle different response formats
       if (response.success) {
+        setExams(response.exams || {});
+      } else if (response.exams) {
+        // Direct exams object without success flag
         setExams(response.exams);
+      } else if (typeof response === 'object' && !response.success) {
+        // Response is the exams object itself
+        setExams(response);
       }
     } catch (err) {
       console.error('Error fetching exams:', err);
+      console.error('Error details:', err.response?.data);
     }
   };
 

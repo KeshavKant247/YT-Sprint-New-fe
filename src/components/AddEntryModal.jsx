@@ -409,9 +409,12 @@ function AddEntryModal({ onClose, onAdd, categories, exams, uniqueSubjects, exis
   const getAllVerticals = () => {
     // Get verticals dynamically from exams prop (API data)
     if (!exams || Object.keys(exams).length === 0) {
+      console.warn('No exams data available. Exams object:', exams);
       return [];
     }
-    return Object.keys(exams).map(vertical => normalizeVerticalName(vertical));
+    const verticals = Object.keys(exams).map(vertical => normalizeVerticalName(vertical));
+    console.log('Available verticals:', verticals);
+    return verticals;
   };
 
   const getExamsByVertical = () => {
