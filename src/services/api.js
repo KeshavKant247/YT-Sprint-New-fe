@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://yt-sprint-new-be.vercel.app';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://yt-sprint-new-fe-uzhk.vercel.app';
 
 console.log('🔗 API Base URL:', API_BASE_URL);
 
