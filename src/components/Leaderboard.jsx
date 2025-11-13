@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, memo, useRef } from 'react';
 import apiService from '../services/api';
 
-function Leaderboard({ onClose, allData }) {
+const Leaderboard = memo(({ onClose, allData }) => {
   const [selectedVertical, setSelectedVertical] = useState(null);
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [summary, setSummary] = useState(null);
@@ -9,6 +9,7 @@ function Leaderboard({ onClose, allData }) {
   const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState('vertical'); // 'vertical' or 'user'
   const [userLeaderboardData, setUserLeaderboardData] = useState([]);
+  const hasFetchedRef = useRef(false);
 
   // Calculate user-wise leaderboard from vertical data
   const calculateUserLeaderboard = useCallback((verticals) => {
@@ -44,12 +45,16 @@ function Leaderboard({ onClose, allData }) {
 
   // Fetch leaderboard data from backend API
   useEffect(() => {
+    // Use ref to persist across re-renders
+    if (hasFetchedRef.current) {
+      console.log('Already fetched, skipping...');
+      return;
+    }
+
     let isMounted = true;
-    let hasFetched = false;
 
     const fetchLeaderboard = async () => {
-      if (hasFetched) return; // Prevent duplicate calls
-      hasFetched = true;
+      hasFetchedRef.current = true;
 
       try {
         setLoading(true);
@@ -757,6 +762,8 @@ function Leaderboard({ onClose, allData }) {
       `}</style>
     </div>
   );
-}
+});
+
+Leaderboard.displayName = 'Leaderboard';
 
 export default Leaderboard;
