@@ -45,50 +45,6 @@ function AddEntryModal({ onClose, onAdd, categories, exams, uniqueSubjects, exis
     return null;
   };
 
-  // Handle link checker button click
-  const handleCheckLink = () => {
-    if (!checkLinkUrl.trim()) {
-      setLinkCheckResult({ error: 'Please enter a video link' });
-      return;
-    }
-
-    setIsChecking(true);
-
-    // Extract video ID
-    const videoId = extractYouTubeVideoId(checkLinkUrl);
-
-    if (!videoId) {
-      setLinkCheckResult({
-        error: 'Invalid YouTube link. Please enter a valid YouTube URL.'
-      });
-      setIsChecking(false);
-      return;
-    }
-
-    // Check for duplicate
-    const duplicate = checkDuplicateVideoUrl(checkLinkUrl);
-
-    setTimeout(() => {
-      if (duplicate) {
-        setLinkCheckResult({
-          exists: true,
-          videoId: videoId,
-          message: '❌ Video is duplicate',
-          data: duplicate
-        });
-      } else {
-        setLinkCheckResult({
-          exists: false,
-          videoId: videoId,
-          message: '✅ Good to go!!'
-        });
-        // Automatically populate the Video Link field when video is not found
-        handleChange('Video Link', checkLinkUrl);
-      }
-      setIsChecking(false);
-    }, 300);
-  };
-
   // Calculate next Sr. No.
   const getNextSrNo = () => {
     if (!existingData || existingData.length === 0) return '1';
@@ -144,6 +100,55 @@ function AddEntryModal({ onClose, onAdd, categories, exams, uniqueSubjects, exis
   useEffect(() => {
     setIsSubmitting(false);
   }, []);
+
+  // Auto-check link when user types (with debounce)
+  useEffect(() => {
+    if (!checkLinkUrl.trim()) {
+      setLinkCheckResult(null);
+      return;
+    }
+
+    // Clear previous timer
+    const timeoutId = setTimeout(() => {
+      setIsChecking(true);
+
+      // Extract video ID
+      const videoId = extractYouTubeVideoId(checkLinkUrl);
+
+      if (!videoId) {
+        setLinkCheckResult({
+          error: 'Invalid YouTube link. Please enter a valid YouTube URL.'
+        });
+        setIsChecking(false);
+        return;
+      }
+
+      // Check for duplicate
+      const duplicate = checkDuplicateVideoUrl(checkLinkUrl);
+
+      setTimeout(() => {
+        if (duplicate) {
+          setLinkCheckResult({
+            exists: true,
+            videoId: videoId,
+            message: '❌ Video is duplicate',
+            data: duplicate
+          });
+        } else {
+          setLinkCheckResult({
+            exists: false,
+            videoId: videoId,
+            message: '✅ Link verified and filled below'
+          });
+          // Automatically populate the Video Link field when video is not found
+          handleChange('Video Link', checkLinkUrl);
+        }
+        setIsChecking(false);
+      }, 300);
+    }, 1000); // Wait 1 second after user stops typing
+
+    return () => clearTimeout(timeoutId);
+  }, [checkLinkUrl, existingData]);
 
   // Note: YouTube videos are NO LONGER downloaded for new entries
   // We just save the YouTube URL directly to save storage and time
@@ -530,27 +535,31 @@ function AddEntryModal({ onClose, onAdd, categories, exams, uniqueSubjects, exis
 
           {/* 2. Verification Link (Link Checker) */}
           <div className="form-group verification-section">
-            <label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               🔍 Verification Link
+              <span style={{
+                backgroundColor: '#e7f3ff',
+                color: '#0066cc',
+                fontSize: '0.75em',
+                padding: '2px 8px',
+                borderRadius: '12px',
+                fontWeight: 'normal',
+                border: '1px solid #b3d9ff'
+              }}>
+                Auto-checks
+              </span>
+              {isChecking && <span style={{ color: '#007bff', fontSize: '0.85em' }}>Checking...</span>}
             </label>
-            <div className="verification-input-group">
-              <input
-                type="url"
-                value={checkLinkUrl}
-                onChange={(e) => {
-                  setCheckLinkUrl(e.target.value);
-                  setLinkCheckResult(null);
-                }}
-                placeholder="https://youtube.com/shorts/..."
-              />
-              <button
-                type="button"
-                onClick={handleCheckLink}
-                disabled={isChecking || !checkLinkUrl.trim()}
-              >
-                {isChecking ? 'Checking...' : 'Check Link'}
-              </button>
-            </div>
+            <input
+              type="url"
+              value={checkLinkUrl}
+              onChange={(e) => {
+                setCheckLinkUrl(e.target.value);
+                setLinkCheckResult(null);
+              }}
+              placeholder="Paste YouTube link here..."
+              style={{ width: '100%' }}
+            />
 
             {/* Display check results */}
             {linkCheckResult && (
@@ -562,52 +571,31 @@ function AddEntryModal({ onClose, onAdd, categories, exams, uniqueSubjects, exis
                 )}
 
                 {linkCheckResult.exists && (
-                  <div className="verification-result-exists">
-                    <div style={{
-                      position: 'fixed',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: 'rgba(0, 0, 0, 0.95)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      zIndex: 9999,
-                      color: 'white',
-                      textAlign: 'center',
-                      padding: '2rem'
-                    }}>
-                      <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>❌</div>
-                      <h1 style={{ fontSize: '2.5rem', marginBottom: '1.5rem', color: '#fff' }}>
-                        {linkCheckResult.message || '❌ Video is duplicate'}
-                      </h1>
-                      <button
-                        onClick={() => {
-                          setLinkCheckResult(null);
-                          setCheckLinkUrl('');
-                        }}
-                        style={{
-                          marginTop: '2rem',
-                          padding: '1rem 2rem',
-                          fontSize: '1.1rem',
-                          backgroundColor: '#dc3545',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '8px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Close
-                      </button>
-                    </div>
+                  <div className="verification-result-exists" style={{
+                    backgroundColor: '#fff3cd',
+                    border: '1px solid #ffc107',
+                    borderRadius: '4px',
+                    padding: '12px',
+                    marginTop: '8px'
+                  }}>
+                    <strong style={{ color: '#856404' }}>⚠️ {linkCheckResult.message || 'Video is duplicate'}</strong>
+                    {linkCheckResult.data && (
+                      <div style={{ marginTop: '8px', fontSize: '0.9em', color: '#856404' }}>
+                        Already exists in Sr. No. {linkCheckResult.data['Sr no.'] || 'N/A'} - {linkCheckResult.data['Exam Name'] || 'N/A'}
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {linkCheckResult.exists === false && (
-                  <div className="verification-result-success">
-                    <strong>{linkCheckResult.message || '✅ Good to go!!'}</strong>
+                  <div className="verification-result-success" style={{
+                    backgroundColor: '#d4edda',
+                    border: '1px solid #28a745',
+                    borderRadius: '4px',
+                    padding: '12px',
+                    marginTop: '8px'
+                  }}>
+                    <strong style={{ color: '#155724' }}>{linkCheckResult.message}</strong>
                   </div>
                 )}
               </div>
