@@ -128,15 +128,23 @@ function AddEntryModal({ onClose, onAdd, categories, exams, uniqueSubjects, exis
   const [checkLinkUrl, setCheckLinkUrl] = useState('');
   const [linkCheckResult, setLinkCheckResult] = useState(null);
   const [isChecking, setIsChecking] = useState(false);
-  
+
   // Subject search states
   const [subjectSearch, setSubjectSearch] = useState('');
   const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
-  
+
+  // Submission state to prevent multiple submissions
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Allowed email domains
   const allowedDomains = ['adda247.com', 'addaeducation.com', 'studyiq.com'];
   const [emailError, setEmailError] = useState('');
-  
+
+  // Reset isSubmitting when modal is reopened
+  useEffect(() => {
+    setIsSubmitting(false);
+  }, []);
+
   // Note: YouTube videos are NO LONGER downloaded for new entries
   // We just save the YouTube URL directly to save storage and time
 
@@ -213,114 +221,137 @@ function AddEntryModal({ onClose, onAdd, categories, exams, uniqueSubjects, exis
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation - All fields are mandatory
-    if (!formData['Email']) {
-      alert('Please enter your Email');
+    // Prevent multiple submissions
+    if (isSubmitting) {
       return;
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData['Email'])) {
-      alert('Please enter a valid email address');
-      return;
-    }
+    setIsSubmitting(true);
 
-    // Validate email domain
-    const emailDomain = formData['Email'].split('@')[1]?.toLowerCase();
-    if (!allowedDomains.includes(emailDomain)) {
-      alert(`Only emails from ${allowedDomains.join(', ')} are allowed`);
-      return;
-    }
-
-    if (!formData['Type of Content']) {
-      alert('Please select Type of Content');
-      return;
-    }
-    
-    // Sub category is only required for "Content" type
-    if (formData['Type of Content'] === 'Content' && !formData['Sub category']) {
-      alert('Please select Sub category');
-      return;
-    }
-
-    if (!formData['Vertical Name']) {
-      alert('Please select Vertical Name');
-      return;
-    }
-
-    if (!formData['Exam Name']) {
-      alert('Please select Exam Name');
-      return;
-    }
-
-    // Subject is only required for "Content" type
-    if (formData['Type of Content'] === 'Content' && !formData['Subject']) {
-      alert('Please select Subject');
-      return;
-    }
-
-    if (!formData['Edit']) {
-      alert('Please select Status');
-      return;
-    }
-
-    // Validate based on status
-    if (formData['Edit'] === 'Final' && !formData['Video Link']) {
-      alert('Please provide YouTube Video Link');
-      return;
-    }
-
-    if (formData['Edit'] === 'Re-edit' && !formData['Re-edit Drive Link']) {
-      alert('Please provide Google Drive Link');
-      return;
-    }
-
-    // Check for duplicate video
-    if (isDuplicate) {
-      const confirmSubmit = window.confirm(
-        'This video URL already exists in the sheet. Do you still want to add it?'
-      );
-      if (!confirmSubmit) {
+    try {
+      // Validation - All fields are mandatory
+      if (!formData['Email']) {
+        alert('Please enter your Email');
+        setIsSubmitting(false);
         return;
       }
-    }
 
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://yt-sprint-new-fe-uzhk.vercel.app';
-
-    // For Re-edit entries with Google Drive link, just submit directly
-    if (formData['Edit'] === 'Re-edit' && formData['Re-edit Drive Link']) {
-      // Extract file ID from Google Drive link if possible
-      const driveUrl = formData['Re-edit Drive Link'].trim();
-      const fileIdMatch = driveUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-      const videoId = fileIdMatch ? fileIdMatch[1] : '';
-
-      const updatedFormData = {
-        ...formData,
-        'VideoId': videoId,
-        'Video Link': driveUrl, // Store Drive link in Video Link field
-      };
-      onAdd(updatedFormData);
-    }
-    // For new entries with YouTube links, just save the YouTube URL directly
-    // No need to download/store the video - saves storage and speeds up submission
-    else if (formData['Video Link'] && formData['Edit'] === 'Final') {
-      const youtubeUrl = formData['Video Link'].trim();
-      
-      // Check if it's a YouTube URL
-      const isYouTubeUrl = /(?:youtube\.com|youtu\.be)/.test(youtubeUrl);
-      
-      if (isYouTubeUrl) {
-        // NEW BEHAVIOR: Just save the YouTube URL, don't download the video
-        // This saves storage space and submission time
-        console.log('✅ Saving YouTube link directly (no download needed):', youtubeUrl);
-        onAdd(formData);
-      } else {
-        // Not a YouTube URL, just submit normally
-        onAdd(formData);
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData['Email'])) {
+        alert('Please enter a valid email address');
+        setIsSubmitting(false);
+        return;
       }
-    } else {
-      onAdd(formData);
+
+      // Validate email domain
+      const emailDomain = formData['Email'].split('@')[1]?.toLowerCase();
+      if (!allowedDomains.includes(emailDomain)) {
+        alert(`Only emails from ${allowedDomains.join(', ')} are allowed`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!formData['Type of Content']) {
+        alert('Please select Type of Content');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Sub category is only required for "Content" type
+      if (formData['Type of Content'] === 'Content' && !formData['Sub category']) {
+        alert('Please select Sub category');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!formData['Vertical Name']) {
+        alert('Please select Vertical Name');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!formData['Exam Name']) {
+        alert('Please select Exam Name');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Subject is only required for "Content" type
+      if (formData['Type of Content'] === 'Content' && !formData['Subject']) {
+        alert('Please select Subject');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!formData['Edit']) {
+        alert('Please select Status');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validate based on status
+      if (formData['Edit'] === 'Final' && !formData['Video Link']) {
+        alert('Please provide YouTube Video Link');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (formData['Edit'] === 'Re-edit' && !formData['Re-edit Drive Link']) {
+        alert('Please provide Google Drive Link');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Check for duplicate video
+      if (isDuplicate) {
+        const confirmSubmit = window.confirm(
+          'This video URL already exists in the sheet. Do you still want to add it?'
+        );
+        if (!confirmSubmit) {
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // For Re-edit entries with Google Drive link, just submit directly
+      if (formData['Edit'] === 'Re-edit' && formData['Re-edit Drive Link']) {
+        // Extract file ID from Google Drive link if possible
+        const driveUrl = formData['Re-edit Drive Link'].trim();
+        const fileIdMatch = driveUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        const videoId = fileIdMatch ? fileIdMatch[1] : '';
+
+        const updatedFormData = {
+          ...formData,
+          'VideoId': videoId,
+          'Video Link': driveUrl, // Store Drive link in Video Link field
+        };
+        await onAdd(updatedFormData);
+      }
+      // For new entries with YouTube links, just save the YouTube URL directly
+      // No need to download/store the video - saves storage and speeds up submission
+      else if (formData['Video Link'] && formData['Edit'] === 'Final') {
+        const youtubeUrl = formData['Video Link'].trim();
+
+        // Check if it's a YouTube URL
+        const isYouTubeUrl = /(?:youtube\.com|youtu\.be)/.test(youtubeUrl);
+
+        if (isYouTubeUrl) {
+          // NEW BEHAVIOR: Just save the YouTube URL, don't download the video
+          // This saves storage space and submission time
+          console.log('✅ Saving YouTube link directly (no download needed):', youtubeUrl);
+          await onAdd(formData);
+        } else {
+          // Not a YouTube URL, just submit normally
+          await onAdd(formData);
+        }
+      } else {
+        await onAdd(formData);
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('An error occurred while submitting the form. Please try again.');
+      setIsSubmitting(false);
     }
   };
 
@@ -788,11 +819,11 @@ function AddEntryModal({ onClose, onAdd, categories, exams, uniqueSubjects, exis
           )}
 
           <div className="modal-actions">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary">
-              Add Entry
+            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+              {isSubmitting ? 'Uploading...' : 'Add Entry'}
             </button>
           </div>        </form>
       </div>
