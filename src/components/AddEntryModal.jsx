@@ -183,11 +183,20 @@ function AddEntryModal({ onClose, onAdd, categories, exams, uniqueSubjects, exis
 
     // Reset Exam Name and Subject when Vertical Name changes
     if (field === 'Vertical Name') {
-      setFormData((prev) => ({
-        ...prev,
-        'Exam Name': '',
-        'Subject': '',
-      }));
+      // Auto-select "All" for Exam and "English" for Subject when "Spoken English" is selected
+      if (value === 'Spoken English') {
+        setFormData((prev) => ({
+          ...prev,
+          'Exam Name': 'All',
+          'Subject': 'English',
+        }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          'Exam Name': '',
+          'Subject': '',
+        }));
+      }
     }
 
     // Reset subcategory and subject when content type changes
@@ -396,7 +405,8 @@ function AddEntryModal({ onClose, onAdd, categories, exams, uniqueSubjects, exis
       'Content': [
         'Topic/Facts',
         'Question',
-        'Tricks & Formulas'
+        'Tricks & Formulas',
+        'Spoken English'
       ],
       'Motivational_or_Fun': [
         'Motivational Shorts',
