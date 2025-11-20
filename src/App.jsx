@@ -438,6 +438,14 @@ function App() {
             <p className="header-subtitle">
               🎬 YouTube Shorts Challenge - Content Management Dashboard
             </p>
+            <p style={{
+              fontSize: '0.85rem',
+              color: '#666',
+              marginTop: '0.5rem',
+              fontStyle: 'italic'
+            }}>
+              Made by <strong style={{ color: '#ec4899' }}>AI-Operations Team</strong>
+            </p>
           </div>
           <div className="header-right">
             {userEmail && (
